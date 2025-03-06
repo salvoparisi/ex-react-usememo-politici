@@ -1,63 +1,73 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script type="text/babel">
-        const { useState, useEffect, useMemo, memo } = React
-        function Lista() {
+        const { useState, useEffect, useMemo, memo } = React;
 
-            const [api, setApi] = useState([])
-            const [text, setText] = useState("")
+        const Card = memo(({ name, image, position, biography }) => {
+            console.log(`Rendering: ${name}`);
+            return (
+                <div className="card shadow-sm">
+                    <img src={image} className="card-img-top" alt={name} />
+                    <div className="card-body">
+                        <h5 className="card-title">{name}</h5>
+                        <p className="card-text"><strong>{position}</strong></p>
+                        <p className="card-text text-muted">{biography}</p>
+                    </div>
+                </div>
+            );
+        });
+
+        function Lista() {
+            const [api, setApi] = useState([]);
+            const [text, setText] = useState("");
+
             useEffect(() => {
                 fetch("https://boolean-spec-frontend.vercel.app/freetestapi/politicians")
-                    .then((res) => res.json())
-                    .then((data) => {
-                        setApi(data)
-                        console.log(data);
-                    })
-            }, [])
+                    .then(res => res.json())
+                    .then(data => setApi(data))
+                    .catch(error => console.error("Errore nel fetch:", error));
+            }, []);
 
             const filteredPoliticians = useMemo(() => {
                 return api.filter(politician =>
                     politician.name.toLowerCase().includes(text.toLowerCase())
                 );
-            }, [text, api])
+            }, [text, api]);
 
-            const Card = memo(({ politician }) => {
-                console.log(`Rendering: ${politician.name}`);
-                return (
-                    <div className="bg-white rounded-2xl shadow-lg p-4 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-                        <img src={politician.image} alt={politician.name} className="w-full h-48 object-cover rounded-xl" />
-                        <h2 className="text-xl font-bold mt-4 text-gray-800">{politician.name}</h2>
-                        <p className="text-gray-600 font-semibold">{politician.position}</p>
-                        <p className="text-gray-700 mt-2 text-sm line-clamp-3">{politician.biography}</p>
-                    </div>
-                );
-            });
             return (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-                    <input type="text" onChange={(e) => setText(e.target.value)}></input>
-                    {filteredPoliticians.map((politician, index) => (
-                        <Card key={index} politician={politician} />
-                    ))}
+                <div className="container">
+                    <div className="mb-3">
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Cerca un politico..."
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                        />
+                    </div>
+                    <div className="row">
+                        {filteredPoliticians.map((politician) => (
+                            <div key={politician.id} className="col-md-4">
+                                <Card {...politician} />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             );
-
         }
     </script>
     <script type="text/babel">
-        const { createRoot } = ReactDOM
-        const listaPolitici = document.querySelector('.lista-politici')
-        const root = createRoot(listaPolitici)
-        root.render(<Lista />)
+        const { createRoot } = ReactDOM;
+        const root = createRoot(document.querySelector('.lista-politici'));
+        root.render(<Lista />);
     </script>
 </head>
 
